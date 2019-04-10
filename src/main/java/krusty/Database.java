@@ -108,13 +108,13 @@ public class Database {
 
 	public String reset(Request req, Response res) {
 		return "{}";
-		//truncate table t, l‰ngst ned i fˆrel‰sningarna
+		//truncate table t, l√§ngst ned i f√∂rel√§sningarna
 	}
 
 	public String createPallet(Request req, Response res) {
 		try{
 			//String id = req.params("id");
-			String cookie = req.params("Cookie");
+			String cookie = req.queryParams("cookie");
 			//String pdate = req.params("production_date");
 			//String cust = req.params("customer");
 			//String blocked = req.params("blocked");
