@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '4.0.3'
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = 'http://repo.maven.apache.org/maven2'
+    }
+}
+
+dependencies {
+    compile 'com.sparkjava:spark-core:2.5'
+    compile 'org.slf4j:slf4j-simple:1.7.25'
+    compile 'mysql:mysql-connector-java:8.0.12'
+    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.25.2'
+	testCompile 'junit:junit:4.12'
+	testCompile 'org.skyscreamer:jsonassert:1.5.0'
+	testCompile 'com.mashape.unirest:unirest-java:1.4.9'
+}
+
+group = 'com.krusty'
+version = '1.0'
+description = 'Krusty'
+sourceCompatibility = '1.8'
+
+application {
+    mainClassName = "krusty.Main"
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'KrustyServer',
+                   'Implementation-Version': version,
+                   'Main-Class': 'krusty.Main'
+    }
+}
