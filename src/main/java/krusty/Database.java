@@ -93,7 +93,7 @@ public class Database {
 		return "";
 	}
 
-	public String getPallets(Request req, Response res) {
+	public String getPallets(Request req, Response res) { //EJ KLAR METOD SKALL ÄNDRAS
 		try{
 			Statement stmt = conn.createStatement();
 			String sql = "SELECT Pallets.id, pName as cookie, orderDate AS production_date, company AS customer, blocked FROM Pallets, Orders WHERE Pallets.id = Orders.id";
