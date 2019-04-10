@@ -109,6 +109,7 @@ public class Database {
 	public String reset(Request req, Response res) {
 		return "{}";
 		//truncate table t, längst ned i föreläsningarna
+		// sätt quantity 500000 i Warehouse
 	}
 
 	public String createPallet(Request req, Response res) {
