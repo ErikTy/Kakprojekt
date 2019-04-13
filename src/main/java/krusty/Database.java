@@ -8,7 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
+import java.util.ArrayList;
 
 
 
@@ -31,7 +31,7 @@ public class Database {
 			System.exit(1);
 		}
 		
-		// Connect to database here
+		
 	}
 
 	public String getCustomers(Request req, Response res) {
@@ -93,13 +93,69 @@ public class Database {
 		return "";
 	}
 
-	public String getPallets(Request req, Response res) { //EJ KLAR METOD SKALL ÄNDRAS
-		try{
-			Statement stmt = conn.createStatement();
-			String sql = "SELECT Pallets.id, pName as cookie, orderDate AS production_date, company AS customer, blocked FROM Pallets, Orders WHERE Pallets.id = Orders.id";
-			ResultSet rs = stmt.executeQuery(sql);
-			return JSONizer.toJSON(rs, "pallets");
-		}
+
+	public String getPallets (Request req, Response res) {
+		int n = 0;
+		
+			String sql = "SELECT pId as id, pName as cookie, production_date, company AS customer, blocked FROM Pallets left outer join Orders on pId = Orders.id WHERE ";
+			
+			ArrayList<String> values = new ArrayList<String>();
+			
+			  if (req.queryParams("from") != null) {
+				    String from = req.queryParams("from");
+				    if(n == 0){
+				    	 sql += "production_date >= ? ";
+				    }
+				    else if(n > 0){
+				   sql += "and production_date >= ? ";
+				    }
+				   values.add(from);
+				   n++;
+				  }
+			  
+			 if (req.queryParams("to") != null) {
+				    String to = req.queryParams("to");
+				    if(n == 0){
+				    	 sql += "production_date <= ? ";
+				    }
+				    else if(n > 0){
+				 sql += "and production_date <= ? ";
+				    }
+				 values.add(to);
+				 n++;
+				  }
+			  if (req.queryParams("cookie") != null) {
+				    String cookie = req.queryParams("cookie");
+				    if(n == 0){
+				    	sql += "pName = ? ";
+				    }
+				    else if (n > 0){
+				    sql += "and pName = ? ";
+				    }
+				    values.add(cookie);
+				    n++;
+				  }
+			  if (req.queryParams("blocked") != null) {
+				    String blocked = req.queryParams("blocked");
+				 if(n == 0){
+				    sql += "blocked = ? ";
+				 }
+				 else if(n > 0){
+					 sql += "and blocked = ? ";
+				 }
+				  
+				  values.add(blocked);
+				  n++;
+			  }
+			  sql+="order by production_date DESC;";
+				  try(PreparedStatement ps = conn.prepareStatement(sql)){
+					    for (int i = 0; i < values.size(); i++) {
+					        ps.setString(i+1, values.get(i));
+					      }
+					    ResultSet rs = ps.executeQuery();
+					   return JSONizer.toJSON(rs, "pallets");
+				  }
+		
 		catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -107,43 +163,70 @@ public class Database {
 	}
 
 	public String reset(Request req, Response res) {
-		return "{}";
-		//truncate table t, längst ned i föreläsningarna
-		// sätt quantity 500000 i Warehouse
+		try{
+		
+		String sql = "Truncate table Pallets;";
+		
+		String update = "Update Warehouse set quantity = 500000;";
+		Statement stmt = conn.createStatement();
+		stmt.executeUpdate(update);
+		stmt.executeUpdate(sql);
+		
+		
+	
+		}
+		catch(SQLException e){
+			
+		}
+		return "";
+		
+	
 	}
+
+	
 
 	public String createPallet(Request req, Response res) {
 		try{
-			//String id = req.params("id");
+			
 			String cookie = req.queryParams("cookie");
-			//String pdate = req.params("production_date");
-			//String cust = req.params("customer");
-			//String blocked = req.params("blocked");
+		
+			
 			
 			Statement stmt = conn.createStatement();
-			//String sql = "SELECT pName AS cookie from Products where pName LIKE '" + cookie +"' ";
-			String sql = "SELECT pName AS cookie from Products where pName = " + cookie +";";
+			stmt.executeUpdate("SET SQL_SAFE_UPDATES = 0;");
+			
+			
+			String sql = "select pName from Products where pName IN(select pName from Products) and pName = '" + cookie +"' ";
 				ResultSet findcookie = stmt.executeQuery(sql);
 				if(findcookie.next()){
+				
 					String sql2 = "insert into Pallets values(?,?,?,?,?)";
-					PreparedStatement ps = conn.prepareStatement(sql2);
-					ps.setInt(1, 1);
+					PreparedStatement ps = conn.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
+					ps.setInt(1, 0);
 					ps.setString(2, "no");
 					ps.setString(3, cookie);
-					ps.setString(4, "NULL");
-					String date = "select CURRENT_TIMESTAMP();";
-					Statement stmt2 = conn.createStatement();
-					ResultSet getdate = stmt2.executeQuery(date);
-					ps.setString(5, getdate.getString(1));
+					ps.setObject(4, null);
+					ps.setTimestamp(5, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
 					
-					ResultSet getid = ps.executeQuery();
-					int id = getid.getInt(1);
+				
+					ps.executeUpdate();
+				
+				
+						    
+						  
 					
 					String updateWarehouse = "update Warehouse, Ingridients set quantity = quantity - (amount*54)"
-							+ " where Warehouse.ingridient = Ingridients.ingridient and Ingridients.pName = " + cookie +"; ";
+							+ " where Warehouse.ingridient = Ingridients.ingridient and Ingridients.pName = '" + cookie +"';";
 				
-					Statement updateW = conn.createStatement();
-					updateW.executeQuery(updateWarehouse);
+					 Statement updateW = conn.createStatement();
+					updateW.executeUpdate(updateWarehouse);
+					
+					ResultSet rs2 = ps.getGeneratedKeys();
+					  
+					int id = 0;
+					if(rs2.next()){
+						id = rs2.getInt(1);
+					}
 					
 				
 					return "{ \"status\": \"ok\" \n" + "  \"id\": " + id +  " }\n";
@@ -165,12 +248,14 @@ public class Database {
 	
 	}
 
-public String test(){
-	return "";
-	
+
+
+
+
+
+
+
+
+
 }
 
-
-
-
-}
