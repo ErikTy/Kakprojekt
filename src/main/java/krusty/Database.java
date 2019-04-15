@@ -97,14 +97,14 @@ public class Database {
 	public String getPallets (Request req, Response res) {
 		int n = 0;
 		
-			String sql = "SELECT pId as id, pName as cookie, production_date, company AS customer, blocked FROM Pallets left outer join Orders on pId = Orders.id WHERE ";
+			String sql = "SELECT pId as id, pName as cookie, production_date, company AS customer, blocked FROM Pallets left outer join Orders on pId = Orders.id ";
 			
 			ArrayList<String> values = new ArrayList<String>();
 			
 			  if (req.queryParams("from") != null) {
 				    String from = req.queryParams("from");
 				    if(n == 0){
-				    	 sql += "production_date >= ? ";
+				    	 sql += "WHERE production_date >= ? ";
 				    }
 				    else if(n > 0){
 				   sql += "and production_date >= ? ";
@@ -116,7 +116,7 @@ public class Database {
 			 if (req.queryParams("to") != null) {
 				    String to = req.queryParams("to");
 				    if(n == 0){
-				    	 sql += "production_date <= ? ";
+				    	 sql += "WHERE production_date <= ? ";
 				    }
 				    else if(n > 0){
 				 sql += "and production_date <= ? ";
@@ -127,7 +127,7 @@ public class Database {
 			  if (req.queryParams("cookie") != null) {
 				    String cookie = req.queryParams("cookie");
 				    if(n == 0){
-				    	sql += "pName = ? ";
+				    	sql += "WHERE pName = ? ";
 				    }
 				    else if (n > 0){
 				    sql += "and pName = ? ";
@@ -138,7 +138,7 @@ public class Database {
 			  if (req.queryParams("blocked") != null) {
 				    String blocked = req.queryParams("blocked");
 				 if(n == 0){
-				    sql += "blocked = ? ";
+				    sql += "WHERE blocked = ? ";
 				 }
 				 else if(n > 0){
 					 sql += "and blocked = ? ";
